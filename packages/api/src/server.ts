@@ -17,6 +17,11 @@ export async function buildServer() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   });
 
+  // Allow text/plain bodies for the CSV import endpoint
+  app.addContentTypeParser('text/plain', { parseAs: 'string' }, (_req, body, done) => {
+    done(null, body);
+  });
+
   app.get('/health', async () => ({
     status: 'ok',
     timestamp: new Date().toISOString(),
