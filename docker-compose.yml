@@ -22,6 +22,7 @@ services:
       dockerfile: packages/api/Dockerfile
     restart: unless-stopped
     environment:
+      NODE_ENV: production
       DATABASE_URL: postgres://cdsfinder:${POSTGRES_PASSWORD:-cdsfinder_dev}@postgres:5432/cdsfinder
       PORT: "3001"
       CORS_ORIGIN: http://localhost:5173
