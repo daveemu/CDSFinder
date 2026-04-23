@@ -7,8 +7,8 @@ const navItems = [
 ];
 
 const adminItems = [
-  { to: '/admin/sources', label: 'SAP Sources', icon: '🔗' },
-  { to: '/admin/ingestion', label: 'Ingestion', icon: '⚙️' },
+  { to: '/admin/ingestion', label: 'Import Views', icon: '⬆️' },
+  { to: '/admin/sources', label: 'OData Sources', icon: '🔗' },
 ];
 
 export default function Sidebar() {

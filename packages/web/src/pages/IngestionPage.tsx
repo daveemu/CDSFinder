@@ -50,9 +50,11 @@ export default function IngestionPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">CDS View Import</h1>
+        <h1 className="text-xl font-bold text-gray-900">Import CDS Views</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Import CDS view metadata from your S/4HANA On-Premise system.
+          Paste a CSV export from SE16 (table{' '}
+          <code className="bg-gray-100 px-1 rounded font-mono text-xs">IXTRCTNENBLDVW</code>
+          ) — no SAP connection needed. Or connect via a custom OData service.
         </p>
       </div>
 

@@ -58,8 +58,13 @@ export default function SourcesPage() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">SAP Data Sources</h1>
-          <p className="text-sm text-gray-500 mt-1">Configure S/4HANA systems to import CDS views from.</p>
+          <h1 className="text-xl font-bold text-gray-900">OData Sources</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Configure custom OData endpoints for automated sync.{' '}
+            <a href="/admin/ingestion" className="text-blue-600 hover:underline">
+              To import via CSV paste, use Import Views instead.
+            </a>
+          </p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
