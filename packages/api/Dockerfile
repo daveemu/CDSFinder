@@ -28,6 +28,8 @@ RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/api/dist ./packages/api/dist
+# Migration SQL files are not emitted by tsc — copy from source
+COPY --from=builder /app/packages/api/src/db/migrations ./packages/api/dist/db/migrations
 
 EXPOSE 3001
 CMD ["node", "packages/api/dist/index.js"]
