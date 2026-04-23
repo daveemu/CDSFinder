@@ -19,12 +19,14 @@ import { FUNCTIONAL_AREA_TO_MODULE } from '@cdsfinder/shared';
 
 // Known column name mappings (lowercase SAP field name → our field)
 const COL_MAP: Record<string, string> = {
-  // View / CDS name
+  // View / CDS name — covers SE16 (IXTRCTNENBLDVW), Fiori View Browser, custom OData exports
   ddlname: 'viewName',
   cdsname: 'viewName',
   viewname: 'viewName',
   cds_name: 'viewName',
   cdsviewname: 'viewName',
+  dataextractionviewname: 'viewName',       // Fiori View Browser / custom OData export
+  extractionviewname: 'viewName',
   // SQL view name
   sqlviewname: 'sqlViewName',
   sqltab: 'sqlViewName',
@@ -33,6 +35,8 @@ const COL_MAP: Record<string, string> = {
   viewlabel: 'viewLabel',
   externalname: 'viewLabel',
   label: 'viewLabel',
+  dataextractionviewdescription: 'viewLabel', // Fiori View Browser
+  extractionviewdescription: 'viewLabel',
   description: 'description',
   // Package
   devclass: 'packageName',
@@ -50,11 +54,15 @@ const COL_MAP: Record<string, string> = {
   extractionenabled: 'extractionEnabled',
   is_released: 'extractionEnabled',
   isreleased: 'extractionEnabled',
+  issapreleasedview: 'extractionEnabled',     // Fiori View Browser
+  issapreleased: 'extractionEnabled',
   is_cdc_enabled: 'deltaEnabled',
   iscdcenabled: 'deltaEnabled',
   cdc_enabled: 'deltaEnabled',
   delta_enabled: 'deltaEnabled',
   deltaenabled: 'deltaEnabled',
+  deltachgdatacaptureissupported: 'deltaEnabled', // Fiori View Browser
+  deltachangedatacaptureissupported: 'deltaEnabled',
   // Delta field
   delta_field: 'deltaElementName',
   deltafield: 'deltaElementName',
@@ -93,7 +101,9 @@ function inferModule(functionalArea: string | null, viewName: string): string | 
     const prefix = functionalArea.split('-')[0];
     if (prefix && prefix.length >= 2 && prefix.length <= 5) return prefix.toUpperCase();
   }
-  const match = /^[ICAP]_([A-Z]{2,5})/i.exec(viewName);
+  // Standard: I_SalesOrder → SD inferred elsewhere; try prefix after namespace
+  const baseName = viewName.replace(/^\/[^/]+\//, ''); // strip /NAMESPACE/ prefix
+  const match = /^[ICAP]_([A-Z]{2,5})/i.exec(baseName);
   if (match?.[1]) return match[1].toUpperCase();
   return null;
 }
@@ -160,8 +170,9 @@ export function parseIxtrctnenbldvwCsv(
       continue;
     }
 
-    // Skip non-CDS rows (e.g. summary/footer lines in SAP list exports)
-    if (!/^[A-Z][A-Z0-9_]{1,29}$/i.test(viewName)) {
+    // Skip non-CDS rows (e.g. summary/footer lines in SAP list exports).
+    // Accepts standard names (I_SalesOrder) and SAP namespace format (/DMBE/I_LinkReason_Text).
+    if (!/^(?:\/[A-Za-z0-9_]{1,10}\/)?[A-Za-z_][A-Za-z0-9_]*$/.test(viewName)) {
       skipped++;
       continue;
     }

@@ -101,14 +101,46 @@ export default function IngestionPage() {
             </p>
           </div>
 
-          <textarea
-            value={csvText}
-            onChange={(e) => { setCsvText(e.target.value); setCsvResult(null); }}
-            placeholder={"DDLNAME\tDDTEXT\tIS_RELEASED\tIS_CDC_ENABLED\n" +
-              "I_SalesOrder\tSales Order\tX\tX\n..."}
-            rows={10}
-            className="w-full font-mono text-xs border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-          />
+          {/* File upload */}
+          <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors mb-3">
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                <span className="font-medium text-blue-600">Click to upload</span> or drag & drop a .csv / .txt file
+              </p>
+            </div>
+            <input
+              type="file"
+              accept=".csv,.txt,text/plain,text/csv"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  setCsvText((ev.target?.result as string) ?? '');
+                  setCsvResult(null);
+                };
+                reader.readAsText(file, 'UTF-8');
+                e.target.value = '';
+              }}
+            />
+          </label>
+
+          <div className="relative">
+            <textarea
+              value={csvText}
+              onChange={(e) => { setCsvText(e.target.value); setCsvResult(null); }}
+              placeholder={"DATAEXTRACTIONVIEWNAME,DATAEXTRACTIONVIEWDESCRIPTION,ISSAPRELEASEDVIEW,DELTACHGDATACAPTUREISSUPPORTED\n" +
+                "I_SalesOrder,Sales Order - Items,X,X\n..."}
+              rows={10}
+              className="w-full font-mono text-xs border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+            />
+            {csvText && (
+              <span className="absolute top-2 right-2 text-xs text-gray-400">
+                {csvText.split('\n').filter(Boolean).length} rows
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 mt-3">
             <button
