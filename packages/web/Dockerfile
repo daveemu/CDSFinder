@@ -1,7 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-ARG VITE_API_BASE_URL=http://localhost:3001
+# Empty = relative URLs (/api/v1/...) so nginx proxies internally to the api container.
+# Override only when the API is on a different host (e.g. split deployment).
+ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm install -g pnpm@9
