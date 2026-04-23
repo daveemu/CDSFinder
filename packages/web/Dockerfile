@@ -6,7 +6,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm install -g pnpm@9
 
-COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/web/package.json ./packages/web/
 
