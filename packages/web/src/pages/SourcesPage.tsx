@@ -12,6 +12,8 @@ const emptyForm: DataSourceInsert = {
   authType: 'BASIC',
   username: '',
   password: '',
+  fieldsEntityUrl: '',
+  annotationsEntityUrl: '',
 };
 
 export default function SourcesPage() {
@@ -79,12 +81,31 @@ export default function SourcesPage() {
           <h2 className="text-sm font-semibold text-gray-700 mb-3">New S/4HANA Connection</h2>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Display Name *" value={form.name} onChange={set('name')} required placeholder="Production ERP" />
-            <Field label="Base URL *" value={form.baseUrl ?? ''} onChange={set('baseUrl')} required placeholder="https://s4host:8000" />
+            <Field label="Views Entity Set URL *" value={form.baseUrl ?? ''} onChange={set('baseUrl')} required
+              placeholder="https://s4host:8000/sap/opu/odata/sap/ZCDS_SRV/ViewSet" />
             <Field label="System ID (SID)" value={form.systemId ?? ''} onChange={set('systemId')} placeholder="PRD" />
             <Field label="SAP Client" value={form.client ?? ''} onChange={set('client')} placeholder="100" />
             <Field label="Username" value={form.username ?? ''} onChange={set('username')} placeholder="RFC_USER" />
             <Field label="Password" value={form.password ?? ''} onChange={set('password')} type="password" />
           </div>
+
+          {/* Optional enrichment entity sets */}
+          <details className="mt-2">
+            <summary className="text-xs font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700">
+              Advanced: Field &amp; Annotation Entity Sets (optional)
+            </summary>
+            <div className="grid grid-cols-1 gap-3 mt-3 pl-1">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                If your custom SEGW service also exposes entity sets for view fields and CDS annotations,
+                enter their full URLs below. When set, the sync will also populate the Fields and Annotations
+                tabs on each view detail page.
+              </div>
+              <Field label="Fields Entity Set URL" value={form.fieldsEntityUrl ?? ''} onChange={set('fieldsEntityUrl')}
+                placeholder="https://s4host:8000/sap/opu/odata/sap/ZCDS_SRV/FieldSet" />
+              <Field label="Annotations Entity Set URL" value={form.annotationsEntityUrl ?? ''} onChange={set('annotationsEntityUrl')}
+                placeholder="https://s4host:8000/sap/opu/odata/sap/ZCDS_SRV/AnnotationSet" />
+            </div>
+          </details>
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={createMutation.isPending}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
@@ -121,6 +142,15 @@ export default function SourcesPage() {
                     {src.lastConnected && (
                       <> · Last connected: {new Date(src.lastConnected).toLocaleString()}</>
                     )}
+                  </div>
+                  <div className="flex gap-2 mt-1.5">
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-green-50 text-green-700">Views ✓</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${src.fieldsEntityUrl ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-400'}`}>
+                      Fields {src.fieldsEntityUrl ? '✓' : '—'}
+                    </span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${src.annotationsEntityUrl ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-400'}`}>
+                      Annotations {src.annotationsEntityUrl ? '✓' : '—'}
+                    </span>
                   </div>
                   {testResults[src.id] && (
                     <div className={`mt-2 text-xs ${testResults[src.id]!.success ? 'text-green-700' : 'text-red-700'}`}>

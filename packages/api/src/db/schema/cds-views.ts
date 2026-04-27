@@ -5,6 +5,7 @@ export const cdsViews = pgTable('cds_views', {
   id: uuid('id').defaultRandom().primaryKey(),
   viewName: text('view_name').notNull().unique(),
   viewLabel: text('view_label'),
+  sqlViewName: text('sql_view_name'),
   description: text('description'),
   packageName: text('package_name'),
   releaseVersion: text('release_version'),

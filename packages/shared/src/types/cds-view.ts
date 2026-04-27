@@ -6,6 +6,7 @@ export interface CdsView {
   id: string;
   viewName: string;
   viewLabel: string | null;
+  sqlViewName: string | null;
   description: string | null;
   packageName: string | null;
   releaseVersion: string | null;
@@ -66,6 +67,7 @@ export interface CdsAssociation {
 export interface CdsViewInsert {
   viewName: string;
   viewLabel: string | null;
+  sqlViewName?: string | null;
   description: string | null;
   packageName: string | null;
   releaseVersion: string | null;

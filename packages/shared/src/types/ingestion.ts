@@ -11,6 +11,9 @@ export interface SapODataConfig {
   password?: string;
   maxPageSize: number;
   timeoutMs: number;
+  // Optional enrichment entity set URLs (requires custom SEGW service)
+  fieldsEntityUrl?: string;
+  annotationsEntityUrl?: string;
 }
 
 export interface RawExtractionViewRecord {
@@ -18,13 +21,36 @@ export interface RawExtractionViewRecord {
   ViewLabel: string;
   ReleaseVersion: string;
   PackageName: string;
-  ExtractionEnabled: boolean;
-  DeltaEnabled: boolean;
+  SqlViewName?: string;
+  ExtractionEnabled: boolean | string;
+  DeltaEnabled: boolean | string;
   DeltaElementName: string | null;
   VDMViewType: string;
   DataCategory: string;
   ODataEntitySet: string | null;
   FunctionalArea: string;
+}
+
+// Shape returned by a custom SEGW entity set for CDS view fields (e.g. from DD03L)
+export interface RawODataFieldRecord {
+  ViewName: string;
+  FieldName: string;
+  AliasName?: string | null;
+  DataType?: string | null;
+  Length?: number | null;
+  Decimals?: number | null;
+  IsKey?: boolean | string | null;
+  Description?: string | null;
+  AbapElement?: string | null;
+}
+
+// Shape returned by a custom SEGW entity set for CDS annotations
+export interface RawODataAnnotationRecord {
+  ViewName: string;
+  Annotation: string;
+  ValueText?: string | null;
+  ValueBool?: boolean | string | null;
+  Target?: string | null;
 }
 
 export interface RawAnnotation {
@@ -75,6 +101,8 @@ export interface DataSource {
   systemId: string | null;
   client: string | null;
   authType: AuthType;
+  fieldsEntityUrl: string | null;
+  annotationsEntityUrl: string | null;
   isActive: boolean;
   lastConnected: string | null;
   createdAt: string;
@@ -90,6 +118,8 @@ export interface DataSourceInsert {
   authType: AuthType;
   username: string | null;
   password: string | null;
+  fieldsEntityUrl?: string | null;
+  annotationsEntityUrl?: string | null;
 }
 
 export interface ConnectionTestResult {

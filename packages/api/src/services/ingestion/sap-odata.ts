@@ -96,13 +96,13 @@ export class SapODataClient {
   }
 
   /**
-   * Streams pages from the configured OData entity set URL.
-   * The URL must point directly to an entity set that returns records
-   * with a ViewName (or similar) field.
+   * Generic paginated entity stream. Works with any OData V2 entity set URL.
+   * The entity set URL is taken from the client's config.baseUrl unless
+   * overrideUrl is supplied (used for fields/annotations entity sets).
    */
-  async *streamExtractionViews(): AsyncGenerator<RawExtractionViewRecord[]> {
+  async *streamEntities<T>(overrideUrl?: string): AsyncGenerator<T[]> {
     const pageSize = Math.min(this.config.maxPageSize, 500);
-    let url: string | null = `${this.config.baseUrl}?$format=json&$top=${pageSize}`;
+    let url: string | null = `${overrideUrl ?? this.config.baseUrl}?$format=json&$top=${pageSize}`;
 
     while (url) {
       const response = await fetchWithRetry(url, this.headers, this.config.timeoutMs);
@@ -112,16 +112,20 @@ export class SapODataClient {
         throw new Error(`OData request failed: HTTP ${response.status} — ${body.slice(0, 300)}`);
       }
 
-      const json = (await response.json()) as ODataV2Response<RawExtractionViewRecord> & ODataError;
+      const json = (await response.json()) as ODataV2Response<T> & ODataError;
 
       if (json.error) {
         throw new Error(`SAP OData error: ${json.error.message.value}`);
       }
 
-      const results: RawExtractionViewRecord[] = json.d?.results ?? [];
+      const results: T[] = json.d?.results ?? [];
       if (results.length > 0) yield results;
 
       url = json.d?.__next ?? null;
     }
+  }
+
+  streamExtractionViews(): AsyncGenerator<RawExtractionViewRecord[]> {
+    return this.streamEntities<RawExtractionViewRecord>();
   }
 }

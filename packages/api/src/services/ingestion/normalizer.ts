@@ -1,10 +1,17 @@
-import type { RawExtractionViewRecord, RawAnnotation, RawField } from '@cdsfinder/shared';
+import type { RawExtractionViewRecord, RawAnnotation, RawField, RawODataFieldRecord, RawODataAnnotationRecord } from '@cdsfinder/shared';
 import type { VdmViewType, DataCategory, CdsViewInsert } from '@cdsfinder/shared';
 import { FUNCTIONAL_AREA_TO_MODULE } from '@cdsfinder/shared';
 
-function stripSapHash<T extends string>(value: string | undefined | null): T | null {
+const VDM_TYPES = ['BASIC', 'COMPOSITE', 'CONSUMPTION', 'EXTENSION'] as const;
+const DATA_CATEGORIES = ['DIMENSION', 'FACT', 'CUBE', 'HIERARCHY', 'TEXT'] as const;
+
+function stripSapHash(value: string | undefined | null): string | null {
   if (!value || value.trim() === '') return null;
-  return value.replace(/^#/, '') as T;
+  return value.replace(/^#/, '').trim();
+}
+
+function validateEnum<T extends string>(val: string | null, allowed: readonly T[]): T | null {
+  return allowed.includes(val as T) ? (val as T) : null;
 }
 
 function nullifyEmpty(value: string | null | undefined): string | null {
@@ -12,21 +19,23 @@ function nullifyEmpty(value: string | null | undefined): string | null {
   return value.trim();
 }
 
+// Handles SAP ABAP boolean convention ("X"/"") as well as JSON booleans.
+export function parseSapBool(val: unknown): boolean {
+  if (typeof val === 'boolean') return val;
+  if (val === 'X' || val === 'true' || val === '1' || val === 'Yes') return true;
+  return false;
+}
+
 function inferModule(functionalArea: string | null, viewName: string): string | null {
   if (functionalArea) {
-    // Try direct lookup first (e.g. "FI-GL" → "FI")
     const mapped = FUNCTIONAL_AREA_TO_MODULE[functionalArea];
     if (mapped) return mapped;
-
-    // Try prefix (take first segment before "-")
     const prefix = functionalArea.split('-')[0];
     if (prefix && prefix.length >= 2 && prefix.length <= 5) return prefix.toUpperCase();
   }
-
-  // Infer from view name prefix convention: I_FI*, C_SD*, A_CO* etc.
-  const match = /^[ICAP]_([A-Z]{2,5})/i.exec(viewName);
+  const baseName = viewName.replace(/^\/[^/]+\//, '');
+  const match = /^[ICAP]_([A-Z]{2,5})/i.exec(baseName);
   if (match?.[1]) return match[1].toUpperCase();
-
   return null;
 }
 
@@ -36,19 +45,22 @@ export function normalizeExtractionView(
 ): CdsViewInsert {
   const functionalArea = nullifyEmpty(raw.FunctionalArea);
   const sapModule = inferModule(functionalArea, raw.ViewName);
+  const vdmRaw = validateEnum(stripSapHash(raw.VDMViewType), VDM_TYPES);
+  const dataCatRaw = validateEnum(stripSapHash(raw.DataCategory), DATA_CATEGORIES);
 
   return {
     viewName: raw.ViewName.trim(),
     viewLabel: nullifyEmpty(raw.ViewLabel),
+    sqlViewName: nullifyEmpty(raw.SqlViewName),
     description: null,
     packageName: nullifyEmpty(raw.PackageName),
     releaseVersion: nullifyEmpty(raw.ReleaseVersion),
-    vdmViewType: stripSapHash<VdmViewType>(raw.VDMViewType),
-    dataCategory: stripSapHash<DataCategory>(raw.DataCategory),
-    extractionEnabled: Boolean(raw.ExtractionEnabled),
-    deltaEnabled: Boolean(raw.DeltaEnabled),
+    vdmViewType: vdmRaw as VdmViewType | null,
+    dataCategory: dataCatRaw as DataCategory | null,
+    extractionEnabled: parseSapBool(raw.ExtractionEnabled),
+    deltaEnabled: parseSapBool(raw.DeltaEnabled),
     deltaElementName: nullifyEmpty(raw.DeltaElementName),
-    odataPublished: Boolean(raw.ODataEntitySet),
+    odataPublished: Boolean(nullifyEmpty(raw.ODataEntitySet)),
     odataEntitySet: nullifyEmpty(raw.ODataEntitySet),
     sapModule,
     functionalArea,
@@ -78,5 +90,29 @@ export function normalizeField(raw: RawField) {
     isKey: Boolean(raw.isKey),
     description: nullifyEmpty(raw.description),
     abapElement: nullifyEmpty(raw.abapElement),
+  };
+}
+
+export function normalizeODataField(raw: RawODataFieldRecord) {
+  return {
+    fieldName: raw.FieldName.trim(),
+    aliasName: nullifyEmpty(raw.AliasName),
+    dataType: nullifyEmpty(raw.DataType),
+    length: raw.Length ?? null,
+    decimals: raw.Decimals ?? null,
+    isKey: parseSapBool(raw.IsKey),
+    description: nullifyEmpty(raw.Description),
+    abapElement: nullifyEmpty(raw.AbapElement),
+  };
+}
+
+export function normalizeODataAnnotation(raw: RawODataAnnotationRecord) {
+  const valueBool = raw.ValueBool != null ? parseSapBool(raw.ValueBool) : null;
+  return {
+    annotation: raw.Annotation,
+    valueText: nullifyEmpty(raw.ValueText),
+    valueBool,
+    valueJson: null,
+    target: nullifyEmpty(raw.Target),
   };
 }
